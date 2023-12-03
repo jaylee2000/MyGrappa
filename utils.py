@@ -2,6 +2,47 @@ from configargparse import ArgumentParser
 import numpy as np
 
 NUM_COIL_MAX = 4
+root_dir = '/Users/jaylee/Documents/2023_2/DSP/FinalProject/MyGrappa'
+
+ii_to_Sx = {
+    1: 12,
+    2: 24,
+    6: 16,
+    7: 32,
+    13: 12,
+    14: 16,
+    15: 20,
+    16: 24,
+    17: 32,
+    18: 40
+}
+
+# need experimenting
+ii_to_hidden = {
+    1: 12,
+    2: 24,
+    6: 16,
+    7: 32,
+    13: 12,
+    14: 16,
+    15: 20,
+    16: 24,
+    17: 32,
+    18: 40,
+}
+
+ii_to_Sy = {
+    1: 1,
+    2: 63,
+    6: 1,
+    7: 63,
+    13: 1,
+    14: 1,
+    15: 124,
+    16: 63,
+    17: 63,
+    18: 7812
+}
 
 def generate_fake_sensitivity_maps(x, y, Nc):
     mps = np.zeros((x.shape[0], y.shape[0], Nc))
