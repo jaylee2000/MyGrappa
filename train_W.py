@@ -1,6 +1,15 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import os
+import numpy as np
+
+from configargparse import ArgumentParser
+from skimage.util import view_as_windows
+from utils import add_args, generate_fake_sensitivity_maps, undersample, \
+                    multicoil_recon, restore_center
+from tempfile import NamedTemporaryFile as NTF
+
 
 # Define the neural network
 class CustomNet(nn.Module):
@@ -12,7 +21,7 @@ class CustomNet(nn.Module):
     def forward(self, x):
         return self.linear(x)
 
-def train_model(dim_Ax, dim_Ay, ii, ncoil=4, num_epochs=1000, lr=0.001):
+def main(args):
     # Create the model, loss function, and optimizer
     model = CustomNet(dim_Ay, dim_Ax, ncoil)
     criterion = nn.MSELoss()
@@ -20,7 +29,8 @@ def train_model(dim_Ax, dim_Ay, ii, ncoil=4, num_epochs=1000, lr=0.001):
 
     # Training loop
     num_epochs = 1000
-    datasets = load_datasets() # load A, C for each set
+    img_arrays = load_imgs(module) # load A, C for each set
+    Ss = load_img_matrices(img_arrays, dim_Ax, dim_Ay, args)
     for epoch in range(num_epochs):
         # Iterate over multiple sets of A and C
         for dataset in datasets:
@@ -43,6 +53,17 @@ def train_model(dim_Ax, dim_Ay, ii, ncoil=4, num_epochs=1000, lr=0.001):
 
     # Save the trained model
     torch.save(model.state_dict(), f'trained_model_dim_{ii}.pth')
+
+
+if __name__ == '__main__':
+    parser = ArgumentParser()
+    parser = add_args(parser)
+    parser.add_argument("--module", type=str, default=False,
+                        choices=['train', 'val', 'test'])
+    parser.add_argument("--n_epochs", type=int, default=1000,
+                        help='number of epochs of training')
+    args = parser.parse_args()
+    main(args)
 
 if __name__ == '__main__':
     dim_Ax, dim_Ay = 12, 100
