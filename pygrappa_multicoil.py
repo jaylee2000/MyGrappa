@@ -64,6 +64,10 @@ def main(args):
     ax = (0, 1)
     kspace = 1/np.sqrt(args.Nx * args.Ny)*np.fft.fftshift(np.fft.fft2(
         np.fft.ifftshift(imspace, axes=ax), axes=ax), axes=ax)
+
+    # TODO: Add noise to kspace
+    # Random Gaussian Noise, Noise at Low frequency, Noise at High frequency etc.
+
     # crop acs_width//2 * Nx window from the center of k-space for calibration
     pd = args.acs_width // 2
     ctr_y = args.Ny // 2
@@ -76,11 +80,13 @@ def main(args):
                  memmap=False)
     if args.data_consistency:
         res = restore_center(res, calib, ctr_y, pd)
+        # TODO: Compute sum of L1 distance at ACS region
     res = np.abs(np.sqrt(args.Nx*args.Ny)*np.fft.fftshift(np.fft.ifft2(
         np.fft.ifftshift(res, axes=ax), axes=ax), axes=ax)) # IFFT
     res0 = multicoil_recon(res, mps, args.Nx, args.Ny)
     plt.imshow(res0, cmap='gray')
     plt.savefig('output_multirecon.png')
+    # TODO: Compute SSIM of image and res0
 
     return
 
