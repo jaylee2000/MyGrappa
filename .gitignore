@@ -2,3 +2,6 @@ __pycache__
 *.png
 playground.py
 128x128
+.DS_Store
+.history
+.pdbrc
