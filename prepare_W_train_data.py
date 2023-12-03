@@ -8,7 +8,7 @@ from tempfile import NamedTemporaryFile as NTF
 
 def load_imgs(module, sub_dir):
     file_paths, imgs = [], []
-    root_directory = './128x128'
+    root_directory = '/storage/jeongjae/128x128'
     sub_dir_path = os.path.join(os.path.join(root_directory, sub_dir), module)
     npy_files = [f for f in os.listdir(sub_dir_path) if f.endswith(".npy")]
     npy_files = [f for f in npy_files if 'S' not in f and 'C' not in f]
