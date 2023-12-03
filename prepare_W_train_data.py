@@ -6,18 +6,17 @@ from skimage.util import view_as_windows
 from utils import add_args, generate_fake_sensitivity_maps, undersample
 from tempfile import NamedTemporaryFile as NTF
 
-def load_imgs(module):
+def load_imgs(module, sub_dir):
     file_paths, imgs = [], []
     root_directory = './128x128'
-    for sub_dir in os.listdir(root_directory):
-        if (not sub_dir.endswith(".csv")) and ('DS_Store' not in sub_dir):
-            sub_dir_path = os.path.join(os.path.join(root_directory, sub_dir), module)
-            npy_files = [f for f in os.listdir(sub_dir_path) if f.endswith(".npy")]
-            for filename in npy_files:
-                file_path = os.path.join(sub_dir_path, filename)
-                img = np.load(file_path)
-                file_paths.append(file_path)
-                imgs.append(img)
+    sub_dir_path = os.path.join(os.path.join(root_directory, sub_dir), module)
+    npy_files = [f for f in os.listdir(sub_dir_path) if f.endswith(".npy")]
+    npy_files = [f for f in npy_files if 'S' not in f and 'C' not in f]
+    for filename in npy_files:
+        file_path = os.path.join(sub_dir_path, filename)
+        img = np.load(file_path)
+        file_paths.append(file_path)
+        imgs.append(img)
     return file_paths, imgs 
 
 def generate_W_train_data(img, mps, args):
@@ -87,7 +86,7 @@ def main(args):
     x, y = np.meshgrid(xx, yy)
     mps = generate_fake_sensitivity_maps(x, y, args.Nc)
 
-    file_paths, imgs = load_imgs(args.module)
+    file_paths, imgs = load_imgs(args.module, args.sub_dir)
     for filepath, img in zip(file_paths, imgs):
         img_id = filepath.split('.npy')[0]
         # S: undersampled k-space for each ii (12x1 ... 40x7812)
@@ -105,7 +104,9 @@ if __name__ == '__main__':
     parser = add_args(parser)
     parser.add_argument("--module", type=str, default='train',
                         choices=['train', 'val', 'test'])
-    parser.add_argument("--n_epochs", type=int, default=1000,
-                        help='number of epochs of training')
+    parser.add_argument("--sub_dir", type=str, default='landmark',
+                        choices=['apparel', 'artwork', 'cars', 'dishes', 'furniture',
+                        'illustrations', 'landmark', 'meme', 'packaged', 'storefronts', 'toys'],
+                        help='subdir to load image npy')
     args = parser.parse_args()
     main(args)
