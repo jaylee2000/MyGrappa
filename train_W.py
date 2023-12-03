@@ -11,8 +11,22 @@ from customnets import CustomNet
 
 SUBSET_FACTOR = 20
 
+class ComplexMSELoss(nn.Module):
+    def __init__(self):
+        super(ComplexMSELoss, self).__init__()
+
+    def forward(self, input_complex, target_complex):
+        # Calculate MSE for real and imaginary parts separately
+        mse_real = nn.functional.mse_loss(input_complex.real, target_complex.real)
+        mse_imag = nn.functional.mse_loss(input_complex.imag, target_complex.imag)
+
+        # Combine real and imaginary MSE
+        mse_combined = mse_real + mse_imag
+
+        return mse_combined
+
 def get_model(ii):
-    return CustomNet(ii_to_Sx(ii), ii_to_hidden(ii), 4 * ii_to_Sx(ii))
+    return CustomNet(ii_to_Sx[ii], ii_to_hidden[ii], 4 * ii_to_Sx[ii])
 
 def get_npy_filenames_C(args):
     directory_path = os.path.join(os.path.join(os.path.join(root_dir, args.data_dir), args.sub_dir), args.module)
@@ -40,7 +54,7 @@ def load_npy_files(npy_filenames_C):
 def main(args):
     # Create the model, loss function, and optimizer
     model = get_model(args.ii)
-    criterion = nn.MSELoss()
+    criterion = ComplexMSELoss()
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
     # Training loop
@@ -51,8 +65,12 @@ def main(args):
             Ss, Cs = load_npy_files(subset_npy_filenames_C)
 
             for S, C in zip(Ss, Cs):
+                S, C = torch.from_numpy(S), torch.from_numpy(C)
+                Sreal, Simag = torch.real(S).float(), torch.imag(S).float()
                 # Forward pass
-                W = model(S)
+                W = model(Sreal.T, Simag.T)
+                W = torch.complex(W[0], W[1])
+                S = torch.complex(Sreal, Simag)
 
                 # Compute the loss & do backward pass
                 loss = criterion(torch.matmul(W, S) - C, torch.zeros_like(C))
@@ -71,7 +89,8 @@ def main(args):
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser = add_args(parser)
-    parser.add_argument("--ii", type=int, choices=[1, 2, 6, 7, 13, 14, 15, 16, 17, 18])
+    parser.add_argument("--ii", type=int, default=1,
+                        choices=[1, 2, 6, 7, 13, 14, 15, 16, 17, 18])
     parser.add_argument("--module", type=str, default='train',
                         choices=['train'])
     parser.add_argument("--data_dir", type=str, default='128x128', choices=['128x128'])
