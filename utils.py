@@ -2,7 +2,7 @@ from configargparse import ArgumentParser
 import numpy as np
 
 NUM_COIL_MAX = 4
-root_dir = '/Users/jaylee/Documents/2023_2/DSP/FinalProject/MyGrappa'
+root_dir = '/storage/jeongjae'
 
 ii_to_Sx = {
     1: 12,
