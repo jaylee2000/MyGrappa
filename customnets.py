@@ -2,6 +2,10 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
+import os
+import sys
+from configargparse import ArgumentParser
+from utils import ii_to_Sx
 
 class ComplexMSELoss(nn.Module):
     def __init__(self):
@@ -61,47 +65,72 @@ class ComplexConvNet(nn.Module):
         x_imag = x_imag.view(-1, 4, self.output_size)
         return x_real, x_imag
 
-if __name__ == '__main__':
-    # Initialize the model
-    model = ComplexConvNet(12)
+def load_train_data(args):
+    train_data = np.load(os.path.join(args.root_dir, args.module, 'kspace_input_nn', args.type + '.npy')) # 1000 x 128 x 128 x 4
+    train_data = np.transpose(train_data, (0, 3, 1, 2))
+    nn_input = torch.from_numpy(train_data)
+    target_data = np.load(os.path.join(args.root_dir, args.module, 'groundtruth_nn', args.type, f"W_{args.ii}.npy")) # 4 x 12
+    nn_target = torch.from_numpy(target_data)
+    return nn_input, nn_target
 
-    # Loss function
+
+def main(args):
+    logfilepath = os.path.join(args.root_dir, f'training_log_type_{args.type}_ii_{args.ii}.txt')
+    log_file = open(logfilepath, 'w')
+    sys.stdout = log_file
+
+    nn_input, nn_target = load_train_data(args)
+    nn_input_real, nn_input_imag = torch.real(nn_input).float(), torch.imag(nn_input).float()
+    nn_target_real, nn_target_imag = torch.real(nn_target).float(), torch.imag(nn_target).float()
+
+    model = ComplexConvNet(ii_to_Sx[args.ii]) # init model
     criterion = ComplexMSELoss()
-
-    # Optimizer
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-    # Dummy input and target
-    train_data = np.load('/storage/jeongjae/128x128/landmark/train/kspace_input_nn/type1.npy') # 1000 X 128 X 128 X 4
-    train_data = np.transpose(train_data, (0, 3, 1, 2))
-    my_input = torch.from_numpy(train_data)
-    my_input_real, my_input_imag = torch.real(my_input).float(), torch.imag(my_input).float()
-
-    target_data = np.load('/storage/jeongjae/128x128/landmark/train/groundtruth_nn/type1/W_1.npy') # 4 X 12
-    my_target = torch.from_numpy(target_data)
-    my_target_real, my_target_imag = torch.real(my_target).float(), torch.imag(my_target).float()
-
     # Training loop
-    num_epochs = 100
-    batch_size = 50
-    for epoch in range(num_epochs):
+    batch_size = args.batch_size
+    for epoch in range(args.n_epochs):
         for i in range(0, 1000, batch_size):
             # Batch data
-            inputs = my_input[i:i+batch_size]
-            inputs_real, inputs_imag = my_input_real[i:i+batch_size], my_input_imag[i:i+batch_size]
-            targets = my_target[i:i+batch_size]
-            targets_real, targets_imag = my_target_real[i:i+batch_size], my_target_imag[i:i+batch_size]
+            inputs = nn_input[i:i+batch_size]
+            inputs_real, inputs_imag = nn_input_real[i:i+batch_size], nn_input_imag[i:i+batch_size]
+            targets = nn_target[i:i+batch_size]
+            targets_real, targets_imag = nn_target_real[i:i+batch_size], nn_target_imag[i:i+batch_size]
 
-            # Forward pass
-            outputs = model(inputs_real, inputs_imag)
-
+            outputs = model(inputs_real, inputs_imag) # forward pass
             output = outputs[0] + 1j * outputs[1]
-            # Calculate loss
-            loss = criterion(output, targets)
+
+            loss = criterion(output, targets) # calculate loss
 
             # Backward pass and optimization
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
-        print(f'Epoch {epoch+1}/{num_epochs}, Loss: {loss.item()}')
+        if (epoch+1) % args.print_loss_per == 0:
+            print(f'Epoch {epoch+1}/{args.n_epochs}, Loss: {loss.item()}')
+        # save model
+        if (epoch+1) % args.save_model_per == 0:
+            savepath = os.path.join(args.root_dir, 'trained_nn_models', args.type, f"model_{args.ii}", f"epoch_{epoch+1}.pth")
+            torch.save(model.state_dict(), savepath)
+            print(f"Saved model epoch: {epoch+1}")
+    log_file.close()
+    sys.stdout = sys.__stdout__
+
+
+if __name__ == '__main__':
+    parser = ArgumentParser()
+    parser.add_argument("--module", type=str, default='train', choices=['train'])
+    parser.add_argument("--root_dir", type=str, default="/storage/jeongjae/128x128/landmark")
+    parser.add_argument("--batch_size", type=int, default=50, help="size of the batches")
+
+    parser.add_argument("--print_loss_per", type=int, default=10, help="print loss per n epochs")
+    parser.add_argument("--save_model_per", type=int, default=20, help="print loss per n epochs")
+
+    parser.add_argument("--n_epochs", type=int, default=1000, help="number of epochs of training")
+
+    parser.add_argument("--ii", type=int, default=1, choices=[1, 2, 6, 7, 13, 14, 15, 16, 17, 18],
+                        help="which kernel to train")
+    parser.add_argument("--type", type=str, default='type1', choices=['type1', 'type2', 'type3'])
+    args = parser.parse_args()
+    main(args)
