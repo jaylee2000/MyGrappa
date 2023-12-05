@@ -1,3 +1,8 @@
+"""
+Used to curate dataset.
+Since original kaggle dataset is rgb, convert it to grayscale.
+"""
+
 from skimage import color, io
 import os
 import numpy as np
