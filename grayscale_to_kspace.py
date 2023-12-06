@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import os
 
 def main():
-    module = 'test'
+    module = 'val'
     xx = np.linspace(0, 1, 128)
     yy = np.linspace(0, 1, 128)
     x, y = np.meshgrid(xx, yy)
@@ -49,7 +49,7 @@ def main():
         local_average_amplitude = convolve(magnitude, filter_weights[:, :, np.newaxis], mode='reflect')
 
         # Normalize the Gaussian noise magnitude to the local average amplitude
-        normalized_noise_magnitude = 0.1  # Adjust this factor as needed
+        normalized_noise_magnitude = 0.7  # Adjust this factor as needed
         real_noise = np.random.normal(scale=normalized_noise_magnitude * local_average_amplitude)
         imag_noise = np.random.normal(scale=normalized_noise_magnitude * local_average_amplitude) * 1j
         noise = real_noise + imag_noise
@@ -82,23 +82,23 @@ def main():
     
     kspace_u_stacked1 = np.stack(tot_u_kspaces_type1, axis=0)
     save_directory = f'/storage/jeongjae/128x128/landmark/{module}/kspace_input_nn'
-    np.save(os.path.join(save_directory, 'type1.npy'), kspace_u_stacked1)
+    # np.save(os.path.join(save_directory, 'type1.npy'), kspace_u_stacked1)
     kspace_u_stacked2 = np.stack(tot_u_kspaces_type2, axis=0)
     save_directory = f'/storage/jeongjae/128x128/landmark/{module}/kspace_input_nn'
-    np.save(os.path.join(save_directory, 'type2.npy'), kspace_u_stacked2)
+    np.save(os.path.join(save_directory, 'type4.npy'), kspace_u_stacked2)
     kspace_u_stacked3 = np.stack(tot_u_kspaces_type3, axis=0)
     save_directory = f'/storage/jeongjae/128x128/landmark/{module}/kspace_input_nn'
-    np.save(os.path.join(save_directory, 'type3.npy'), kspace_u_stacked3)
+    np.save(os.path.join(save_directory, 'type5.npy'), kspace_u_stacked3)
 
     kspace_stacked1 = np.stack(tot_kspaces_type1, axis=0)
     save_directory = f'/storage/jeongjae/128x128/landmark/{module}/kspace_fullsampled'
-    np.save(os.path.join(save_directory, 'type1.npy'), kspace_stacked1)
+    # np.save(os.path.join(save_directory, 'type1.npy'), kspace_stacked1)
     kspace_stacked2 = np.stack(tot_kspaces_type2, axis=0)
     save_directory = f'/storage/jeongjae/128x128/landmark/{module}/kspace_fullsampled'
-    np.save(os.path.join(save_directory, 'type2.npy'), kspace_stacked2)
+    np.save(os.path.join(save_directory, 'type4.npy'), kspace_stacked2)
     kspace_stacked3 = np.stack(tot_kspaces_type3, axis=0)
     save_directory = f'/storage/jeongjae/128x128/landmark/{module}/kspace_fullsampled'
-    np.save(os.path.join(save_directory, 'type3.npy'), kspace_stacked3)
+    np.save(os.path.join(save_directory, 'type5.npy'), kspace_stacked3)
 
 if __name__ == '__main__':
     main() 

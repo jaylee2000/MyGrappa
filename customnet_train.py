@@ -72,6 +72,6 @@ if __name__ == '__main__':
 
     parser.add_argument("--ii", type=int, default=1, choices=[1, 2, 6, 7, 13, 14, 15, 16, 17, 18],
                         help="which kernel to train")
-    parser.add_argument("--type", type=str, default='type1', choices=['type1', 'type2', 'type3'])
+    parser.add_argument("--type", type=str, default='type1', choices=['type1', 'type2', 'type3', 'type4', 'type5'])
     args = parser.parse_args()
     main(args)

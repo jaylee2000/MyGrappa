@@ -67,15 +67,15 @@ if __name__ == "__main__":
 
     # for lsstype in [1, 10, 100]:
     for lsstype in [1, 10, 100]:
-        for datatype in [1, 2, 3]:
+        for datatype in [4, 5]:
             root_directory = '/storage/jeongjae/128x128/landmark'
-            module = 'train' # 'train', 'val', 'test'
-            under = 'kspace_temp'
-            typek = f'type{datatype}_{lsstype}.npy'
+            module = 'train'
+            under = 'kspace_fullsampled'
+            typek = f'type{datatype}.npy'
             folder = os.path.join(root_directory, module, under, typek)
             kspace = np.load(folder)
 
-            Ws = extract_W_groundtruth(kspace)
+            Ws = extract_W_groundtruth(kspace[0:lsstype, :, :, :])
             save_folder = os.path.join(root_directory, module, 'trained_weights', f'type{datatype}', f'lss_{lsstype}')
             for ii in [1, 2, 6, 7, 13, 14, 15, 16, 17, 18]:
                 np.save(os.path.join(save_folder, 'W_{}.npy'.format(ii)), Ws[ii])
