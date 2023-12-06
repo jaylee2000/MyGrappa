@@ -9,6 +9,7 @@ import torch
 from scipy.stats import rankdata
 import time
 import matplotlib.pyplot as plt
+import sys
 
 
 # read kspace undersampled input
@@ -332,6 +333,10 @@ def save_sample(b1_res0, b21_res0, b22_res0, b23_res0, b3_res0, meta_res0, image
 
 
 def main(args):
+    logfilepath = os.path.join(args.root_dir, f'finaleval_log_type_{args.type}.txt')
+    log_file = open(logfilepath, 'w')
+    sys.stdout = log_file
+
     # sensitivity mapping
     xx = np.linspace(0, 1, N)
     yy = np.linspace(0, 1, N)
@@ -388,7 +393,8 @@ def main(args):
     print_statistics(b1_psnrs, b21_psnrs, b22_psnrs, b23_psnrs, b3_psnrs, meta_psnrs)
     print_avg_rank(b1_psnrs, b21_psnrs, b22_psnrs, b23_psnrs, b3_psnrs, meta_psnrs)
     save_sample(b1_res0, b21_res0, b22_res0, b23_res0, b3_res0, meta_res0, image_groundtruth, args)
-
+    log_file.close()
+    sys.stdout = sys.__stdout__
 
 
 if __name__ == "__main__":
