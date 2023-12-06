@@ -14,7 +14,7 @@ pip install -r requirements.txt
 #3. NN Data preparation
  3-1. create_groundtruth_nn.py
 
-#4. Train NN
+#4. Train NN (ii, type별로 다 돌리기)
  customnet_train.py
 
 #5. Using Val set, choose best NN (ii, type별로 다 돌리기)
@@ -23,5 +23,5 @@ pip install -r requirements.txt
 #6. Save neural network's W output for test set (ii, type별로 다 돌리기)
  customnet_infer.py --module test
 
-#7. Compare 2a, 2b, 2c, META methods
+#7. Compare 2a, 2b, 2c, META methods # takes ~1000s (16-17 mins) for entire test set
  final_eval.py

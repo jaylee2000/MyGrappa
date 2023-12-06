@@ -7,6 +7,8 @@ import numpy as np
 import os
 import torch
 from scipy.stats import rankdata
+import time
+import matplotlib.pyplot as plt
 
 
 # read kspace undersampled input
@@ -233,14 +235,10 @@ def infer_from_model(model, kspace_input):
     output = outputs[0] + 1j * outputs[1]
     return output.detach().numpy()
 
-def load_b3_Ws(args, kspace_input):
+def load_b3_Ws(b3_nns, kspace_input):
     Ws = {}
-    b3_base_dir = os.path.join(args.root_dir, 'trained_nn_models', args.type)
     for ii in [1, 2, 6, 7, 13, 14, 15, 16, 17, 18]:
-        b3_dir = os.path.join(b3_base_dir, f'model_{ii}')
-        model = ComplexConvNet(ii_to_Sx[ii])
-        model.load_state_dict(torch.load(os.path.join(b3_dir, 'best.pth')))
-        model.eval()
+        model = b3_nns[ii]
         Ws[ii] = infer_from_model(model, kspace_input)
     return Ws
 
@@ -312,6 +310,26 @@ def get_Ws_most_consistent(kspace_input, calib_input, b1_Ws, b21_Ws, b22_Ws, b23
     elif idx == 4:
         return b3_Ws
 
+def load_b3_nns(args):
+    models = {}
+    b3_nns_base_dir = os.path.join(args.root_dir, 'trained_nn_models', args.type)
+    for ii in [1, 2, 6, 7, 13, 14, 15, 16, 17, 18]:
+        b3_nns_dir = os.path.join(b3_nns_base_dir, f'model_{ii}')
+        model = ComplexConvNet(ii_to_Sx[ii])
+        model.load_state_dict(torch.load(os.path.join(b3_nns_dir, 'best.pth')))
+        model.eval()
+        models[ii] = model
+    return models
+
+def save_sample(b1_res0, b21_res0, b22_res0, b23_res0, b3_res0, meta_res0, image_groundtruth, args):
+    plt.imsave(os.path.join(args.root_dir, 'sample', args.type, 'b1_res0.png'), b1_res0, cmap='gray')
+    plt.imsave(os.path.join(args.root_dir, 'sample', args.type, 'b21_res0.png'), b21_res0, cmap='gray')
+    plt.imsave(os.path.join(args.root_dir, 'sample', args.type, 'b22_res0.png'), b22_res0, cmap='gray')
+    plt.imsave(os.path.join(args.root_dir, 'sample', args.type, 'b23_res0.png'), b23_res0, cmap='gray')
+    plt.imsave(os.path.join(args.root_dir, 'sample', args.type, 'b3_res0.png'), b3_res0, cmap='gray')
+    plt.imsave(os.path.join(args.root_dir, 'sample', args.type, 'meta_res0.png'), meta_res0, cmap='gray')
+    plt.imsave(os.path.join(args.root_dir, 'sample', args.type, 'image_groundtruth.png'), image_groundtruth, cmap='gray')
+
 
 def main(args):
     # sensitivity mapping
@@ -326,7 +344,16 @@ def main(args):
     groundtruth_kspaces = np.load(os.path.join(args.groundtruth_file, args.type + '.npy'))
     b1_psnrs, b21_psnrs, b22_psnrs, b23_psnrs, b3_psnrs, meta_psnrs = \
         [], [], [], [], [], []
+
+    b21_Ws = load_b2_Ws(args, 1)
+    b22_Ws = load_b2_Ws(args, 10)
+    b23_Ws = load_b2_Ws(args, 100)
+
+    b3_nns = load_b3_nns(args)
+
     for i in range(kspace_inputs.shape[0]):
+        # if i % 10 != 0: # COMMENT THIS OUT FOR FINAL RESULT
+        #     continue
         kspace_input = kspace_inputs[i, :, :, :]
         u_kspace_input = undersample(kspace_input.copy(), 2)
         calib_input = kspace_input[:, ctr_y-pd:ctr_y+pd, :].copy()
@@ -337,10 +364,10 @@ def main(args):
         image_groundtruth = multicoil_recon(image_groundtruth, mps, N, N)
 
         b1_Ws, b1_res0 = do_recon(u_kspace_input, calib_input, None, mps)
-        b21_Ws, b21_res0 = do_recon(u_kspace_input, calib_input, load_b2_Ws(args, 1), mps)
-        b22_Ws, b22_res0 = do_recon(u_kspace_input, calib_input, load_b2_Ws(args, 10), mps)
-        b23_Ws, b23_res0 = do_recon(u_kspace_input, calib_input, load_b2_Ws(args, 100), mps)
-        b3_Ws, b3_res0 = do_recon(u_kspace_input, calib_input, load_b3_Ws(args, kspace_input), mps)
+        b21_Ws, b21_res0 = do_recon(u_kspace_input, calib_input, b21_Ws, mps)
+        b22_Ws, b22_res0 = do_recon(u_kspace_input, calib_input, b22_Ws, mps)
+        b23_Ws, b23_res0 = do_recon(u_kspace_input, calib_input, b23_Ws, mps)
+        b3_Ws, b3_res0 = do_recon(u_kspace_input, calib_input, load_b3_Ws(b3_nns, kspace_input), mps)
         meta_Ws = get_Ws_most_consistent(u_kspace_input, calib_input, b1_Ws, b21_Ws, b22_Ws, b23_Ws, b3_Ws)
         meta_Ws, meta_res0 = do_recon(u_kspace_input, calib_input, meta_Ws, mps)
 
@@ -360,7 +387,7 @@ def main(args):
 
     print_statistics(b1_psnrs, b21_psnrs, b22_psnrs, b23_psnrs, b3_psnrs, meta_psnrs)
     print_avg_rank(b1_psnrs, b21_psnrs, b22_psnrs, b23_psnrs, b3_psnrs, meta_psnrs)
-
+    save_sample(b1_res0, b21_res0, b22_res0, b23_res0, b3_res0, meta_res0, image_groundtruth, args)
 
 
 
