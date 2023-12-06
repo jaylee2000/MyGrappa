@@ -1,7 +1,4 @@
-import torch
 import torch.nn as nn
-import torch.optim as optim
-import numpy as np
 
 class ComplexMSELoss(nn.Module):
     def __init__(self):
@@ -60,48 +57,3 @@ class ComplexConvNet(nn.Module):
         x_real = x_real.view(-1, 4, self.output_size)
         x_imag = x_imag.view(-1, 4, self.output_size)
         return x_real, x_imag
-
-if __name__ == '__main__':
-    # Initialize the model
-    model = ComplexConvNet(12)
-
-    # Loss function
-    criterion = ComplexMSELoss()
-
-    # Optimizer
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
-
-    # Dummy input and target
-    train_data = np.load('/storage/jeongjae/128x128/landmark/train/kspace_input_nn/type1.npy') # 1000 X 128 X 128 X 4
-    train_data = np.transpose(train_data, (0, 3, 1, 2))
-    my_input = torch.from_numpy(train_data)
-    my_input_real, my_input_imag = torch.real(my_input).float(), torch.imag(my_input).float()
-
-    target_data = np.load('/storage/jeongjae/128x128/landmark/train/groundtruth_nn/type1/W_1.npy') # 4 X 12
-    my_target = torch.from_numpy(target_data)
-    my_target_real, my_target_imag = torch.real(my_target).float(), torch.imag(my_target).float()
-
-    # Training loop
-    num_epochs = 100
-    batch_size = 50
-    for epoch in range(num_epochs):
-        for i in range(0, 1000, batch_size):
-            # Batch data
-            inputs = my_input[i:i+batch_size]
-            inputs_real, inputs_imag = my_input_real[i:i+batch_size], my_input_imag[i:i+batch_size]
-            targets = my_target[i:i+batch_size]
-            targets_real, targets_imag = my_target_real[i:i+batch_size], my_target_imag[i:i+batch_size]
-
-            # Forward pass
-            outputs = model(inputs_real, inputs_imag)
-
-            output = outputs[0] + 1j * outputs[1]
-            # Calculate loss
-            loss = criterion(output, targets)
-
-            # Backward pass and optimization
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-        print(f'Epoch {epoch+1}/{num_epochs}, Loss: {loss.item()}')

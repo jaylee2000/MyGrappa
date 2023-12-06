@@ -44,11 +44,11 @@ def extract_W_groundtruth(calibs, kernel_size=(5, 5), coil_axis=-1, lamda=0.01):
                 if ii not in S_dict:
                     S_dict[ii] = S
                 else:
-                    S_dict[ii] = np.concatenate((S_dict[ii], S), axis=1)
+                    S_dict[ii] = np.concatenate((S_dict[ii], S), axis=0)
                 if ii not in T_dict:
                     T_dict[ii] = T
                 else:
-                    T_dict[ii] = np.concatenate((T_dict[ii], T), axis=1)
+                    T_dict[ii] = np.concatenate((T_dict[ii], T), axis=0)
     for ii in [1, 2, 6, 7, 13, 14, 15, 16, 17, 18]:
         S = S_dict[ii]
         T = T_dict[ii]
@@ -63,9 +63,10 @@ def extract_W_groundtruth(calibs, kernel_size=(5, 5), coil_axis=-1, lamda=0.01):
 
 if __name__ == "__main__":
     # datatype = 1 # 2, 3
-    # lsstype = 100 # 1, 10, 100, 1000
+    # lsstype = 100 # 1, 10, 100
 
-    for lsstype in [100, 1000]:
+    # for lsstype in [1, 10, 100]:
+    for lsstype in [1, 10, 100]:
         for datatype in [1, 2, 3]:
             root_directory = '/storage/jeongjae/128x128/landmark'
             module = 'train' # 'train', 'val', 'test'
@@ -75,7 +76,7 @@ if __name__ == "__main__":
             kspace = np.load(folder)
 
             Ws = extract_W_groundtruth(kspace)
-            save_folder = os.path.join(root_directory, module, 'weights', f'type{datatype}', f'lss_{lsstype}')
+            save_folder = os.path.join(root_directory, module, 'trained_weights', f'type{datatype}', f'lss_{lsstype}')
             for ii in [1, 2, 6, 7, 13, 14, 15, 16, 17, 18]:
                 np.save(os.path.join(save_folder, 'W_{}.npy'.format(ii)), Ws[ii])
             print(f"complete lss_{lsstype} data_{datatype}")

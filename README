@@ -1,2 +1,27 @@
 pip3 install torch torchvision torchaudio
 pip install -r requirements.txt
+
+
+#1. Dataset preparation
+ 1-1. Download data from https://www.kaggle.com/datasets/rhtsingh/google-universal-image-embeddings-128x128/data
+ 1-2. rgb_to_grayscale.py
+ 1-3. split_train_val_test.py
+ 1-4. grayscale_to_kspace.py
+
+#2. 2b Data Preparation
+ typeb2_get_bigdata_W.py
+
+#3. NN Data preparation
+ 3-1. create_groundtruth_nn.py
+
+#4. Train NN
+ customnet_train.py
+
+#5. Using Val set, choose best NN (ii, type별로 다 돌리기)
+ customnet_infer.py --module val
+
+#6. Save neural network's W output for test set (ii, type별로 다 돌리기)
+ customnet_infer.py --module test
+
+#7. Compare 2a, 2b, 2c, META methods
+ final_eval.py
