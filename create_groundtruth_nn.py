@@ -11,6 +11,7 @@ from skimage.util import view_as_windows
 from masks_precompute import masks
 from utils import generate_fake_sensitivity_maps
 from pygrappa_multicoil import load_image
+from configargparse import ArgumentParser
 import numpy as np
 import os
 
@@ -51,16 +52,16 @@ def extract_W_groundtruth(calib, kernel_size=(5, 5), coil_axis=-1, lamda=0.01):
 
     return Ws
 
-if __name__ == "__main__":
+def main(args):
     xx = np.linspace(0, 1, 128)
     yy = np.linspace(0, 1, 128)
     x, y = np.meshgrid(xx, yy)
     mps = generate_fake_sensitivity_maps(x, y, 4)
 
     base_dir = '/storage/jeongjae/128x128/landmark'
-    module = 'test' # 'val' or 'test'
+    module = args.module # 'val' or 'test'
     npy_folder = 'kspace_fullsampled'
-    thistype = 'type2'
+    thistype = args.thistype
 
     kspace_tot = np.load(os.path.join(base_dir, module, npy_folder, thistype + '.npy'))
     W_dict = {}
@@ -78,3 +79,11 @@ if __name__ == "__main__":
         W = np.stack(W_dict[ii], axis=0)
         save_folder = os.path.join(base_dir, module, 'groundtruth_nn', thistype)
         np.save(os.path.join(save_folder, f'W_{ii}.npy'), W)
+
+if __name__ == "__main__":
+    parser = ArgumentParser()
+    parser.add_argument("--module", type=str, default='train', choices=['train', 'val'])
+    parser.add_argument("--thistype", type=str, default='type4',
+                        choices=['type1', 'type2', 'type3', 'type4', 'type5'])
+    args = parser.parse_args()
+    main(args)
