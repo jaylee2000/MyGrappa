@@ -37,8 +37,9 @@ class ComplexConvNet(nn.Module):
         self.conv2 = ComplexConv2d(4, 4, kernel_size=(5, 5), stride=2, padding=2) # Output size: 32x32x4
         self.conv3 = ComplexConv2d(4, 4, kernel_size=(5, 5), stride=2, padding=2) # Output size: 16x16x4
         self.conv4 = ComplexConv2d(4, 4, kernel_size=(5, 5), stride=2, padding=2) # Output size: 8x8x4
-        self.fc_real = nn.Linear(8 * 8 * 4, 4 * output_size)
-        self.fc_imag = nn.Linear(8 * 8 * 4, 4 * output_size)
+        self.conv5 = ComplexConv2d(4, 4, kernel_size=(5, 5), stride=2, padding=2) # Output size: 4x4x4
+        self.fc_real = nn.Linear(4 * 4 * 4, 4 * output_size)
+        self.fc_imag = nn.Linear(4 * 4 * 4, 4 * output_size)
 
     def forward(self, x_real, x_imag):
         x_real1, x_imag1 = self.conv1(x_real, x_imag)
@@ -49,10 +50,12 @@ class ComplexConvNet(nn.Module):
         x_real3, x_imag3 = nn.functional.relu(x_real3), nn.functional.relu(x_imag3)
         x_real4, x_imag4 = self.conv4(x_real3, x_imag3)
         x_real4, x_imag4 = nn.functional.relu(x_real4), nn.functional.relu(x_imag4)
+        x_real5, x_imag5 = self.conv5(x_real4, x_imag4)
+        x_real5, x_imag5 = nn.functional.relu(x_real5), nn.functional.relu(x_imag5)
 
-        x_real4, x_imag4 = x_real4.reshape(-1, 8 * 8 * 4), x_imag4.reshape(-1, 8 * 8 * 4)
-        x_real = self.fc_real(x_real4)
-        x_imag = self.fc_imag(x_imag4)
+        x_real5, x_imag5 = x_real5.reshape(-1, 4 * 4 * 4), x_imag5.reshape(-1, 4 * 4 * 4)
+        x_real = self.fc_real(x_real5)
+        x_imag = self.fc_imag(x_imag5)
 
         x_real = x_real.view(-1, 4, self.output_size)
         x_imag = x_imag.view(-1, 4, self.output_size)

@@ -403,7 +403,7 @@ if __name__ == "__main__":
     parser.add_argument("--input_file", type=str, default='/storage/jeongjae/128x128/landmark/test/kspace_input_nn')
     parser.add_argument("--groundtruth_file", type=str, default='/storage/jeongjae/128x128/landmark/test/kspace_fullsampled')
 
-    parser.add_argument("--type", type=str, default='type1', choices=['type1', 'type2', 'type3'])
+    parser.add_argument("--type", type=str, default='type1', choices=['type1', 'type2', 'type3', 'type4', 'type5'])
 
     parser.add_argument("--module", type=str, default="test", choices=["test"])
     args = parser.parse_args()

@@ -66,9 +66,9 @@ if __name__ == '__main__':
     parser.add_argument("--batch_size", type=int, default=50, help="size of the batches")
 
     parser.add_argument("--print_loss_per", type=int, default=10, help="print loss per n epochs")
-    parser.add_argument("--save_model_per", type=int, default=20, help="print loss per n epochs")
+    parser.add_argument("--save_model_per", type=int, default=10, help="print loss per n epochs")
 
-    parser.add_argument("--n_epochs", type=int, default=1000, help="number of epochs of training")
+    parser.add_argument("--n_epochs", type=int, default=300, help="number of epochs of training")
 
     parser.add_argument("--ii", type=int, default=1, choices=[1, 2, 6, 7, 13, 14, 15, 16, 17, 18],
                         help="which kernel to train")
