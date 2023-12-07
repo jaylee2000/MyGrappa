@@ -273,22 +273,23 @@ def get_consistency(kspace_input, calib_input, Ws):
     # Using the 5 sets of 'Ws', compute data consistency in the ACS (calib_input)
     # return the Ws that are most consistent with the ACS
     consistency = 0
-    for ii in [1, 2, 6, 7, 13, 14, 15, 16, 17, 18]:
-        W = Ws[ii] # 4x12
-        mask = get_masks(ii)
-        mask = np.tile(mask[:, :, np.newaxis], (1, 1, 4))
-        for i in range(2, 126):
-            for j in range(2, 18):
-                tmp = calib_input[i-2:i+3, j-2:j+3, :] * mask
-                tmp_flatten = tmp.reshape((25, 4))
-                zero_indices = np.where(tmp_flatten[:,0] == 0)[0]
-                zeromask = np.ones(25, dtype=bool)
-                zeromask[zero_indices] = False
-                tmp_trunc = tmp_flatten[zeromask]
-                # make it 1D
-                tmp_trunc = tmp_trunc.reshape(-1)
-                pred = W @ tmp_trunc # 4x1
-                consistency += np.sum(np.abs(pred - calib_input[i, j, :]) ) # 불일치도
+    # for ii in [1, 2, 6, 7, 13, 14, 15, 16, 17, 18]:
+    ii = 18
+    W = Ws[ii] # 4x12
+    mask = get_masks(ii)
+    mask = np.tile(mask[:, :, np.newaxis], (1, 1, 4))
+    for i in range(2, 126):
+        for j in range(2, 18):
+            tmp = calib_input[i-2:i+3, j-2:j+3, :] * mask
+            tmp_flatten = tmp.reshape((25, 4))
+            zero_indices = np.where(tmp_flatten[:,0] == 0)[0]
+            zeromask = np.ones(25, dtype=bool)
+            zeromask[zero_indices] = False
+            tmp_trunc = tmp_flatten[zeromask]
+            # make it 1D
+            tmp_trunc = tmp_trunc.reshape(-1)
+            pred = W @ tmp_trunc # 4x1
+            consistency += np.sum(np.abs(pred - calib_input[i, j, :]) ) # 불일치도
     return -consistency # 음의 부호 가해줘서 consistency가 클수록 좋도록
 
 def get_Ws_most_consistent(kspace_input, calib_input, b1_Ws, b21_Ws, b22_Ws, b23_Ws, b3_Ws):
